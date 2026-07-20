@@ -1,0 +1,15 @@
+{
+  "name": "Oggetti del bebè",
+  "short_name": "Oggetti bebè",
+  "description": "Traccia gli oggetti e i vestiti per neonati ricevuti in prestito o regalo",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff7ed",
+  "theme_color": "#292524",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
