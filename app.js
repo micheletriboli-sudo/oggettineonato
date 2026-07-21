@@ -104,15 +104,20 @@
     if (showForm) {
       html += `<form class="form-card" id="add-form">
         <div class="form-row">
-          <button type="button" class="photo-btn" id="photo-btn">
+          <div class="photo-preview" id="photo-preview">
             ${formPhoto ? `<img src="${formPhoto}" />` : ICONS.camera}
-          </button>
-          <input type="file" accept="image/*" id="photo-input" style="display:none" />
+          </div>
           <div class="form-fields">
             <input id="f-nome" placeholder="Cosa? (es. Tutina 0-3 mesi)" />
             <input id="f-persona" placeholder="Da chi? (nome)" />
           </div>
         </div>
+        <div class="photo-actions">
+          <button type="button" id="btn-camera">${ICONS.camera} Scatta foto</button>
+          <button type="button" id="btn-gallery">${ICONS.image} Dalla galleria</button>
+        </div>
+        <input type="file" accept="image/*" capture="environment" id="photo-input-camera" style="display:none" />
+        <input type="file" accept="image/*" id="photo-input-gallery" style="display:none" />
         <div class="tipo-toggle">
           <button type="button" data-tipo="prestito" class="active">In prestito</button>
           <button type="button" data-tipo="regalo">Regalo</button>
@@ -194,16 +199,23 @@
     const cancelBtn = document.getElementById("cancel-form");
     if (cancelBtn) cancelBtn.onclick = () => { showForm = false; formPhoto = null; render(); };
 
-    const photoBtn = document.getElementById("photo-btn");
-    const photoInput = document.getElementById("photo-input");
-    if (photoBtn && photoInput) {
-      photoBtn.onclick = () => photoInput.click();
-      photoInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        formPhoto = await resizeImage(file);
-        render();
-      };
+    const btnCamera = document.getElementById("btn-camera");
+    const inputCamera = document.getElementById("photo-input-camera");
+    const btnGallery = document.getElementById("btn-gallery");
+    const inputGallery = document.getElementById("photo-input-gallery");
+    const handlePhotoFile = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      formPhoto = await resizeImage(file);
+      render();
+    };
+    if (btnCamera && inputCamera) {
+      btnCamera.onclick = () => inputCamera.click();
+      inputCamera.onchange = handlePhotoFile;
+    }
+    if (btnGallery && inputGallery) {
+      btnGallery.onclick = () => inputGallery.click();
+      inputGallery.onchange = handlePhotoFile;
     }
 
     document.querySelectorAll(".tipo-toggle button").forEach((btn) => {
