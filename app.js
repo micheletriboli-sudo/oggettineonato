@@ -74,6 +74,10 @@
     });
     const people = Object.keys(groups).sort((a, b) => a.localeCompare(b));
 
+    const totaleRisparmiato = items
+      .filter((it) => it.tipo === "prestito" && it.valore)
+      .reduce((sum, it) => sum + it.valore, 0);
+
     let html = `<div class="wrap">
       <div class="header">
         <div>
@@ -82,6 +86,13 @@
         </div>
         <button class="btn-add" id="toggle-form">${ICONS.plus} Aggiungi</button>
       </div>`;
+
+    if (totaleRisparmiato > 0) {
+      html += `<div class="savings-card">
+        <span class="savings-label">Risparmiati finora grazie ai prestiti</span>
+        <span class="savings-amount">€ ${totaleRisparmiato.toLocaleString("it-IT", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+      </div>`;
+    }
 
     if (items.length > 0) {
       html += `<div class="search-wrap">
@@ -106,6 +117,7 @@
           <button type="button" data-tipo="prestito" class="active">In prestito</button>
           <button type="button" data-tipo="regalo">Regalo</button>
         </div>
+        <input id="f-valore" type="number" min="0" step="0.5" placeholder="Valore stimato € (facoltativo)" style="margin-bottom:12px" />
         <textarea id="f-note" rows="2" placeholder="Note (taglia, dove si trova, ecc.) - facoltativo"></textarea>
         <div class="form-actions">
           <button type="button" class="cancel" id="cancel-form">Annulla</button>
@@ -139,6 +151,7 @@
             <div class="item-body">
               <p class="item-name">${esc(it.nome)}</p>
               ${it.note ? `<p class="item-note">${esc(it.note)}</p>` : ""}
+              ${it.valore ? `<p class="item-note">€ ${it.valore.toLocaleString("it-IT")}</p>` : ""}
               ${
                 it.tipo === "regalo"
                   ? `<span class="status-pill pill-regalo">Regalo</span>`
@@ -208,6 +221,8 @@
         const persona = document.getElementById("f-persona").value.trim();
         const note = document.getElementById("f-note").value.trim();
         const tipo = document.querySelector(".tipo-toggle button.active").dataset.tipo;
+        const valoreRaw = document.getElementById("f-valore").value;
+        const valore = valoreRaw ? parseFloat(valoreRaw) : null;
         if (!nome || !persona) return;
         items.unshift({
           id: uid(),
@@ -215,6 +230,7 @@
           persona,
           tipo,
           note,
+          valore,
           photo: formPhoto,
           status: tipo === "prestito" ? "in_uso" : null,
           dataAggiunta: new Date().toISOString(),
