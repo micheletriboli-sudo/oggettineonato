@@ -107,7 +107,7 @@
           <button type="button" class="photo-btn" id="photo-btn">
             ${formPhoto ? `<img src="${formPhoto}" />` : ICONS.camera}
           </button>
-          <input type="file" accept="image/*" capture="environment" id="photo-input" style="display:none" />
+          <input type="file" accept="image/*" id="photo-input" style="display:none" />
           <div class="form-fields">
             <input id="f-nome" placeholder="Cosa? (es. Tutina 0-3 mesi)" />
             <input id="f-persona" placeholder="Da chi? (nome)" />
