@@ -9,6 +9,12 @@
     "Passeggino", "Pigiama", "Sacco nanna", "Scaldabiberon", "Sterilizzatore",
     "Tiralatte", "Tutina", "Vaschetta bagno", "Altro",
   ];
+  const OLD_DEFAULT_CATEGORIES = [
+    "Tutina", "Body", "Pigiama", "Cappottino", "Copertina",
+    "Passeggino", "Ovetto/Seggiolino auto", "Culla", "Lettino",
+    "Vaschetta per il bagno", "Fascia/Marsupio", "Sterilizzatore",
+    "Scaldabiberon", "Ciuccio", "Box", "Girello", "Altro",
+  ];
   const ICONS = {
     plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
     search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
@@ -45,13 +51,6 @@
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }
-
-  const OLD_DEFAULT_CATEGORIES = [
-    "Tutina", "Body", "Pigiama", "Cappottino", "Copertina",
-    "Passeggino", "Ovetto/Seggiolino auto", "Culla", "Lettino",
-    "Vaschetta per il bagno", "Fascia/Marsupio", "Sterilizzatore",
-    "Scaldabiberon", "Ciuccio", "Box", "Girello", "Altro",
-  ];
 
   function loadCategories() {
     let stored = [];
@@ -135,7 +134,9 @@
     showForm = true;
     render();
     const formEl = document.getElementById("add-form");
-    if (formEl) formEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (formEl && typeof formEl.scrollIntoView === "function") {
+      formEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   function render() {
