@@ -25,6 +25,7 @@
     check: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
     reopen: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
     image: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    close: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
   };
   const STATUS_LABEL = { in_uso: "In uso", da_restituire: "Da restituire", restituito: "Restituito" };
 
@@ -38,6 +39,7 @@
   let formTipo = "prestito";
   let selectValue = categories[0] || NEW_CATEGORY_VALUE;
   let draft = { persona: "", note: "", valore: "", customNome: "" };
+  let errorMessage = null;
 
   function load() {
     try {
@@ -49,7 +51,12 @@
   }
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   function loadCategories() {
@@ -78,7 +85,11 @@
   }
 
   function saveCategories(cats) {
-    localStorage.setItem(CATEGORY_KEY, JSON.stringify(cats));
+    try {
+      localStorage.setItem(CATEGORY_KEY, JSON.stringify(cats));
+    } catch (e) {
+      // Non-critical: if this fails, categories just won't persist for next time
+    }
   }
 
   function uid() {
@@ -91,14 +102,14 @@
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const maxW = 480;
+          const maxW = 380;
           const scale = Math.min(1, maxW / img.width);
           const canvas = document.createElement("canvas");
           canvas.width = img.width * scale;
           canvas.height = img.height * scale;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL("image/jpeg", 0.72));
+          resolve(canvas.toDataURL("image/jpeg", 0.6));
         };
         img.src = e.target.result;
       };
@@ -163,6 +174,13 @@
         </div>
         <button class="btn-add" id="toggle-form">${ICONS.plus} Aggiungi</button>
       </div>`;
+
+    if (errorMessage) {
+      html += `<div class="error-banner">
+        <span>${esc(errorMessage)}</span>
+        <button id="dismiss-error">${ICONS.close}</button>
+      </div>`;
+    }
 
     if (totaleRisparmiato > 0) {
       html += `<div class="savings-card">
@@ -349,40 +367,67 @@
         const valore = draft.valore ? parseFloat(draft.valore) : null;
         if (!nome || !persona) return;
 
+        const itemsBackup = JSON.parse(JSON.stringify(items));
+
         if (!categories.includes(nome)) {
           categories.push(nome);
           saveCategories(categories);
         }
 
-        if (editingId) {
-          const it = items.find((i) => i.id === editingId);
-          it.nome = nome;
-          it.persona = persona;
-          it.tipo = tipo;
-          it.note = note;
-          it.valore = valore;
-          it.photo = formPhoto;
-          if (tipo === "regalo") it.status = null;
-          else if (!it.status) it.status = "in_uso";
-        } else {
-          items.unshift({
-            id: uid(),
-            nome,
-            persona,
-            tipo,
-            note,
-            valore,
-            photo: formPhoto,
-            status: tipo === "prestito" ? "in_uso" : null,
-            dataAggiunta: new Date().toISOString(),
-          });
+        function applyToItems(photoValue) {
+          if (editingId) {
+            const it = items.find((i) => i.id === editingId);
+            it.nome = nome;
+            it.persona = persona;
+            it.tipo = tipo;
+            it.note = note;
+            it.valore = valore;
+            it.photo = photoValue;
+            if (tipo === "regalo") it.status = null;
+            else if (!it.status) it.status = "in_uso";
+          } else {
+            items.unshift({
+              id: uid(),
+              nome,
+              persona,
+              tipo,
+              note,
+              valore,
+              photo: photoValue,
+              status: tipo === "prestito" ? "in_uso" : null,
+              dataAggiunta: new Date().toISOString(),
+            });
+          }
         }
-        save();
+
+        applyToItems(formPhoto);
+        let ok = save();
+
+        if (!ok && formPhoto) {
+          // Retry without the photo: text data is more important than the image
+          items = JSON.parse(JSON.stringify(itemsBackup));
+          applyToItems(null);
+          ok = save();
+          if (ok) {
+            errorMessage = "Spazio esaurito sul telefono: la scheda è stata salvata ma senza foto. Elimina qualche foto vecchia per liberare spazio.";
+          }
+        }
+
+        if (!ok) {
+          items = itemsBackup;
+          errorMessage = "Impossibile salvare: lo spazio di archiviazione del telefono è pieno. Elimina qualche oggetto (soprattutto quelli con foto) e riprova.";
+          render();
+          return;
+        }
+
         showForm = false;
         resetForm();
         render();
       };
     }
+
+    const dismissErrorBtn = document.getElementById("dismiss-error");
+    if (dismissErrorBtn) dismissErrorBtn.onclick = () => { errorMessage = null; render(); };
 
     document.querySelectorAll(".toggle-group").forEach((btn) => {
       btn.onclick = () => {

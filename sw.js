@@ -1,4 +1,4 @@
-const CACHE_NAME = "oggetti-bebe-v7";
+const CACHE_NAME = "oggetti-bebe-v8";
 const ASSETS = [
   "./index.html",
   "./styles.css",
